@@ -41,11 +41,13 @@ class sendGetRequest {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                 val analysisResult = response.body()
 
+                Log.d("server msg", "${response.body()}")
+
                 var gson = Gson()
-                val dataAnalsysResult = gson.fromJson(analysisResult, DTO.AppResult::class.java)
-                val analysis_re = dataAnalsysResult.toString()
-                Log.d("msg", "${analysis_re}")
-                callback.onSuccess(analysis_re)
+                val jsonString = analysisResult.toString() //서버에서 받아온 json을 string으로 변경
+                val dataAnalsysResult = gson.fromJson(jsonString, DTO.ApplicationResult::class.java)
+                Log.d("msg", dataAnalsysResult.message)
+                callback.onSuccess(dataAnalsysResult.message)
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
