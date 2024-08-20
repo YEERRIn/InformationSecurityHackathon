@@ -6,31 +6,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import retrofit2.Call
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import androidx.appcompat.app.AlertDialog
 
 class MainActivity : AppCompatActivity() {
 
-    //수신 받은 메시지에 대한 변수
     private lateinit var textViewMessage: TextView
     private lateinit var textViewMessageContent: TextView
     private lateinit var smsReceiver: BroadcastReceiver
     private val SMS_PERMISSION_CODE = 101
 
-    private lateinit var buttonSendMessage : Button //전송 버튼
-    private val sendGetRequest = sendGetRequest() //sendGetRequest.kt 불러오기..
-
+    private lateinit var buttonSendMessage: Button
+    private val sendGetRequest = sendGetRequest()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,18 +30,15 @@ class MainActivity : AppCompatActivity() {
 
         textViewMessage = findViewById(R.id.textViewMessage)
         textViewMessageContent = findViewById(R.id.textViewMessageContent)
-
         buttonSendMessage = findViewById(R.id.buttonSendMessage)
 
-        // Retrofit 초기화
         sendGetRequest.setRetrofit()
 
-        //sms 권한 요청
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECEIVE_SMS), SMS_PERMISSION_CODE)
         }
 
-        smsReceiver = object : BroadcastReceiver(){
+        smsReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 val message = intent?.getStringExtra("Message")
                 textViewMessageContent.text = "$message"
@@ -59,28 +48,36 @@ class MainActivity : AppCompatActivity() {
         val filter = IntentFilter("sms_Received")
         registerReceiver(smsReceiver, filter)
 
-        //버튼 클릭시 get 요청
         buttonSendMessage.setOnClickListener {
-            //get요청에 대한 결과를 가져옴
-            sendGetRequest.callAppAnalysis(object : sendGetRequest.ResponseCallback{
-                //팝업 메시지 띄우기
+            sendGetRequest.callAppAnalysis(object : sendGetRequest.ResponseCallback {
                 override fun onSuccess(message: String) {
-                    showPopUP(message)
+                    showMalwareAlert(message)
                 }
 
                 override fun onFailure(errorMessage: String) {
-                    showPopUP(errorMessage)
+                    showMalwareAlert(errorMessage)
                 }
             })
         }
-
     }
 
-    private fun showPopUP(message: String){
+    private fun showMalwareAlert(message: String) {
+        val malwareReporter = MalwareReporter(this)
         AlertDialog.Builder(this)
-            .setTitle("dataAnalysis")
-            .setMessage(message)
-            .setPositiveButton(android.R.string.ok, null)
+            .setTitle("악성 앱 경고")
+            .setMessage("$message\n이 앱은 악성으로 확인되었습니다. 신고하시겠습니까?")
+            .setPositiveButton("경찰청 (112)") { dialog, _ ->
+                malwareReporter.reportMalware(MalwareReporter.ReportType.POLICE)
+                dialog.dismiss()
+            }
+            .setNeutralButton("금융감독원 (1332)") { dialog, _ ->
+                malwareReporter.reportMalware(MalwareReporter.ReportType.FINANCIAL)
+                dialog.dismiss()
+            }
+            .setNegativeButton("한국인터넷진흥원 (118)") { dialog, _ ->
+                malwareReporter.reportMalware(MalwareReporter.ReportType.SPAM)
+                dialog.dismiss()
+            }
             .show()
     }
 
@@ -88,6 +85,4 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         unregisterReceiver(smsReceiver)
     }
-
-
 }
