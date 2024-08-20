@@ -28,4 +28,12 @@
         android:paddingBottom="16dp"
         android:background="#f0f0f0"
         android:padding="8dp"/>
+
+    <Button
+        android:id="@+id/buttonSendMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="14dp"
+        android:text="메시지 검사" />
+
 </LinearLayout>
