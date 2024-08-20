@@ -22,7 +22,7 @@ class SMSReceiver : BroadcastReceiver() {
         this.context = context // context를 저장
 
         if (intent?.action == "android.provider.Telephony.SMS_RECEIVED") {
-            Log.v("test", "있어요")
+            Log.v("test", "SMS 수신됨")
             val bundle = intent.extras
             val messages = smsMessageParse(bundle)
 
@@ -49,7 +49,7 @@ class SMSReceiver : BroadcastReceiver() {
     }
 
     // 문자 내용 파싱 함수
-    fun smsMessageParse(bundle: Bundle?): Array<SmsMessage?>? {
+    private fun smsMessageParse(bundle: Bundle?): Array<SmsMessage?>? {
         if (bundle == null) return null
         val objs = bundle["pdus"] as Array<Any>?
 
@@ -61,15 +61,15 @@ class SMSReceiver : BroadcastReceiver() {
         return message
     }
 
-    // url 패턴 탐지
-    fun extractURL(message: String): List<String> {
+    // URL 패턴 탐지
+    private fun extractURL(message: String): List<String> {
         val urlPattern = "(https?://\\S+)".toRegex()
         return urlPattern.findAll(message)
             .map { it.value }
             .toList()
     }
 
-    fun sendUrlToContainer(extractedUrl: String) {
+    private fun sendUrlToContainer(extractedUrl: String) {
         try {
             val url = URL("http://192.168.56.105:5556/analyze")
             val conn = url.openConnection() as HttpURLConnection
@@ -112,9 +112,8 @@ class SMSReceiver : BroadcastReceiver() {
         }
     }
 
-
     // 응답 메시지를 처리하는 함수 (예: UI 업데이트, 사용자 알림 등)
-    fun handleResponse(context: Context, responseMessage: String) {
+    private fun handleResponse(context: Context, responseMessage: String) {
         // JSON 파싱을 위한 기본적인 예제 (응답 형식이 변경될 경우 조정 필요)
         try {
             val jsonObject = JSONObject(responseMessage)
@@ -127,13 +126,13 @@ class SMSReceiver : BroadcastReceiver() {
             val logAnalysis = dynamicAnalysis.getString("log_analysis")
 
             // 분석 결과에 따라 메시지 생성
-            val isSuspicious = logAnalysis.contains("No Suspicious activity", ignoreCase = true) ||
+            val isSuspicious = logAnalysis.contains("suspicious", ignoreCase = true) ||
                     urlLength > 20 || !hasHttps
 
-            val resultMessage = if (isSuspicious) {
-                "안전한 문자: URL은 안전하며 로그에서도 악의적인 활동이 발견되지 않았습니다."
-            } else {
+            val resultMessage = if (!isSuspicious) {
                 "스미싱 의심: URL이 의심스럽거나 로그에서 악의적인 활동이 발견되었습니다."
+            } else {
+                "안전한 문자: URL은 안전하며 로그에서도 악의적인 활동이 발견되지 않았습니다."
             }
 
             Handler(Looper.getMainLooper()).post {
