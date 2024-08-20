@@ -88,7 +88,12 @@ class SMSReceiver : BroadcastReceiver() {
             val responseCode = conn.responseCode
             Log.d("URL 전송 결과", "Response Code: $responseCode")
 
-            val responseMessage = conn.inputStream.bufferedReader().use { it.readText() }
+            // 응답 메시지 처리
+            val responseMessage = if (responseCode == HttpURLConnection.HTTP_OK) {
+                conn.inputStream.bufferedReader().use { it.readText() }
+            } else {
+                conn.errorStream.bufferedReader().use { it.readText() }
+            }
             Log.d("분석 결과", responseMessage)
 
             context?.let { ctx ->
@@ -108,19 +113,30 @@ class SMSReceiver : BroadcastReceiver() {
         }
     }
 
-
     // 응답 메시지를 처리하는 함수 (예: UI 업데이트, 사용자 알림 등)
     private fun handleResponse(context: Context, responseMessage: String) {
-        // JSON 파싱을 위한 기본적인 예제 (응답 형식이 변경될 경우 조정 필요)
         try {
             val jsonObject = JSONObject(responseMessage)
-            val staticAnalysis = jsonObject.getJSONObject("static_analysis")
-            val dynamicAnalysis = jsonObject.getJSONObject("dynamic_analysis")
 
-            val hasHttps = staticAnalysis.getBoolean("has_https")
-            val urlLength = staticAnalysis.getInt("url_length")
-            val dynamicStatus = dynamicAnalysis.getString("status")
-            val logAnalysis = dynamicAnalysis.getString("log_analysis")
+            // static_analysis 존재 여부 확인
+            val staticAnalysis = if (jsonObject.has("static_analysis")) {
+                jsonObject.getJSONObject("static_analysis")
+            } else {
+                null
+            }
+
+            // dynamic_analysis 존재 여부 확인
+            val dynamicAnalysis = if (jsonObject.has("dynamic_analysis")) {
+                jsonObject.getJSONObject("dynamic_analysis")
+            } else {
+                null
+            }
+
+            // 기본 값 설정
+            val hasHttps = staticAnalysis?.optBoolean("has_https", false) ?: false
+            val urlLength = staticAnalysis?.optInt("url_length", 0) ?: 0
+            val dynamicStatus = dynamicAnalysis?.optString("status", "unknown") ?: "unknown"
+            val logAnalysis = dynamicAnalysis?.optString("log_analysis", "") ?: ""
 
             // 분석 결과에 따라 메시지 생성
             val isSuspicious = logAnalysis.contains("suspicious", ignoreCase = true) ||
@@ -141,4 +157,5 @@ class SMSReceiver : BroadcastReceiver() {
             Log.e("분석 결과 처리", "JSON 파싱 오류: ${e.message}")
         }
     }
+
 }
