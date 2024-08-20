@@ -71,7 +71,7 @@ class SMSReceiver : BroadcastReceiver() {
 
     private fun sendUrlToContainer(extractedUrl: String) {
         try {
-            val url = URL("http://192.168.56.105:5556/analyze")
+            val url = URL("http://133.186.228.209:5556/analyze")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.setRequestProperty("Content-Type", "application/json; utf-8")
@@ -85,15 +85,12 @@ class SMSReceiver : BroadcastReceiver() {
                 os.write(input, 0, input.size)
             }
 
-            // 서버 응답을 읽기
             val responseCode = conn.responseCode
             Log.d("URL 전송 결과", "Response Code: $responseCode")
 
-            // 응답 본문 읽기
             val responseMessage = conn.inputStream.bufferedReader().use { it.readText() }
             Log.d("분석 결과", responseMessage)
 
-            // 응답 메시지 처리
             context?.let { ctx ->
                 Handler(Looper.getMainLooper()).post {
                     handleResponse(ctx, responseMessage)
@@ -103,7 +100,6 @@ class SMSReceiver : BroadcastReceiver() {
         } catch (e: Exception) {
             e.printStackTrace()
             Log.e("URL 전송 실패", e.toString())
-            // 여기서 사용자에게 오류 메시지를 알리거나 다른 처리를 할 수 있습니다.
             context?.let { ctx ->
                 Handler(Looper.getMainLooper()).post {
                     Toast.makeText(ctx, "URL 전송 중 오류 발생", Toast.LENGTH_LONG).show()
@@ -111,6 +107,7 @@ class SMSReceiver : BroadcastReceiver() {
             }
         }
     }
+
 
     // 응답 메시지를 처리하는 함수 (예: UI 업데이트, 사용자 알림 등)
     private fun handleResponse(context: Context, responseMessage: String) {
