@@ -1,39 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
-    android:padding="20dp">
+    android:background="#003366"
+    android:foregroundTint="#000000"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context=".MainActivity">
 
     <TextView
         android:id="@+id/textViewMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="8dp"
         android:text="메시지:"
-        android:textSize="18sp"
-        android:textColor="#000000"
-        android:paddingBottom="8dp"/>
+        android:textColor="#F2EDED"
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/textViewMessageContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="메시지 내용이 여기에 표시됩니다"
-        android:textSize="16sp"
-        android:textColor="#333333"
-        android:paddingBottom="16dp"
         android:background="#f0f0f0"
-        android:padding="8dp"/>
+        android:padding="8dp"
+        android:paddingBottom="16dp"
+        android:text="메시지 내용이 여기에 표시됩니다"
+        android:textColor="#333333"
+        android:textSize="16sp" />
 
     <Button
         android:id="@+id/buttonSendMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="14dp"
-        android:text="메시지 검사" />
+        android:text="메시지 검사"
+        app:strokeColor="#000FFE" />
 
 </LinearLayout>
